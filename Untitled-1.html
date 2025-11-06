@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador de Currículos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <h1>📝 Gerador de Currículos</h1>
+
+    <form action="gera_curriculo.php" method="POST">
+        
+        <fieldset>
+            <legend>Dados Pessoais</legend>
+            <div class="field-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" id="nome" name="nome" required>
+
+                <label for="idade">Idade:</label>
+                <input type="number" id="idade" name="idade" min="1" max="120">
+            </div>
+
+            <div class="field-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="telefone">Telefone:</label>
+                <input type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999">
+            </div>
+
+            <label for="resumo">Sobre mim (Resumo Profissional):</label><br><br>
+            <textarea id="resumo" name="resumo" rows="5"></textarea><br><br>
+
+            <label for="competencias">Competências:</label><br><br>
+            <textarea id="competencias" name="competencias" rows="3" placeholder="Separe suas competências por vírgula, ex: Liderança, Python, Vendas"></textarea><br><br>
+        </fieldset>
+
+        <hr>
+
+        <fieldset>
+            <legend>Formação Acadêmica</legend>
+            <div id="formacao-container">
+                <div class="formacao-item dynamic-item">
+                    <label>Curso:</label>
+                    <input type="text" name="formacao_curso[]" required>
+                    <label>Instituição:</label>
+                    <input type="text" name="formacao_instituicao[]" required><br><br>
+                    <label>Ano Conclusão:</label>
+                    <input type="number" name="formacao_ano[]" placeholder="AAAA" required maxlength="4">
+                </div>
+            </div>
+            <button type="button" class="botao-adicionar" id="adicionar-formacao">
+                + Adicionar Outra Formação
+            </button>
+        </fieldset>
+
+        <hr>
+
+        <fieldset>
+            <legend>Experiência Profissional</legend>
+            <div id="experiencia-container">
+                <div class="experiencia-item dynamic-item">
+                    <div class="field-group">
+                        <label>Nome da Empresa:</label>
+                        <input type="text" name="exp_empresa[]" required>
+                        <label>Cargo/Função:</label>
+                        <input type="text" name="exp_cargo[]" required><Br><br>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Data de Início:</label>
+                        <input type="month" name="exp_inicio[]" required>
+                        <label>Data de Saída:</label>
+                        <input type="month" name="exp_saida[]"> <div class="current-job-checkbox"><br><br>
+                            <input type="checkbox" name="exp_atual[]" value="1">
+                            <label>Emprego Atual</label><br><br>
+                        </div>
+                    </div>
+                    
+                    <label>Descrição das Atividades/Resultados:</label><br><br>
+                    <textarea name="exp_descricao[]" rows="4"></textarea>
+                </div>
+            </div>
+            <button type="button" class="botao-adicionar" id="adicionar-experiencia">
+                + Adicionar Outra Experiência
+            </button>
+        </fieldset>
+
+        <hr>
+        
+    </form>
+
+    <footer>
+        <button type="button" class="botao-secundario" onclick="window.print()">Imprimir / Salvar como PDF</button>
+    </footer>
+</body>
+</html>
+
+<div>
+<script>
+$(document).ready(function() {
+    // 1. Função para adicionar um novo campo de Formação Acadêmica
+    $("#adicionar-formacao").click(function() {
+        // HTML do novo bloco de formação
+        const novoCampoFormacao = `
+            <div class="formacao-item dynamic-item">
+                <button type="button" class="remover-item">Remover</button>
+                <label>Curso:</label>
+                <input type="text" name="formacao_curso[]" required>
+                <label>Instituição:</label>
+                <input type="text" name="formacao_instituicao[]" required>
+                <label>Ano Conclusão:</label>
+                <input type="number" name="formacao_ano[]" placeholder="AAAA" required maxlength="4">
+            </div>
+        `;
+        $("#formacao-container").append(novoCampoFormacao);
+    });
+
+    // 2. Função para adicionar um novo campo de Experiência Profissional
+    $("#adicionar-experiencia").click(function() {
+        // HTML do novo bloco de experiência
+        const novoCampoExperiencia = `
+            <div class="experiencia-item dynamic-item">
+                <button type="button" class="remover-item">Remover</button>
+                <div class="field-group">
+                    <label>Nome da Empresa:</label>
+                    <input type="text" name="exp_empresa[]" required>
+                    <label>Cargo/Função:</label>
+                    <input type="text" name="exp_cargo[]" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Data de Início:</label>
+                    <input type="month" name="exp_inicio[]" required>
+                    <label>Data de Saída:</label>
+                    <input type="month" name="exp_saida[]">
+                    <div class="current-job-checkbox">
+                        <input type="checkbox" name="exp_atual[]" value="1">
+                        <label>Emprego Atual</label>
+                    </div>
+                </div>
+                
+                <label>Descrição das Atividades/Resultados:</label>
+                <textarea name="exp_descricao[]" rows="4"></textarea>
+            </div>
+        `;
+        $("#experiencia-container").append(novoCampoExperiencia);
+    });
+
+    // 3. Função para remover um item dinâmico (Formação ou Experiência)
+    // Usa um 'event delegate' para funcionar em elementos adicionados dinamicamente
+    $(document).on('click', '.remover-item', function() {
+        $(this).closest('.dynamic-item').remove();
+    });
+
+    // 4. Estilo para o botão de remover (opcional, pode ir no CSS principal)
+    // Para simplificar, adicione esta regra ao seu 'style.css':
+    /*
+    .remover-item {
+        float: right;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    .remover-item:hover {
+        background-color: #c82333;
+    }
+    */
+});
+
+
+</script>
+
+</div>
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Currículo de <?php echo $nome; ?></title>
+    <style>
+        /* Estilos do Currículo */
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 40px auto;
+            max-width: 800px;
+            padding: 30px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 5px;
+        }
+        .dados-contato {
+            text-align: center;
+            color: #555;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 2px solid #1a73e8;
+            color: #333;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .resumo-texto {
+            white-space: pre-wrap; /* Mantém quebras de linha do textarea */
+            margin-bottom: 20px;
+        }
+        .item-lista {
+            margin-bottom: 15px;
+        }
+        .item-lista strong {
+            display: block;
+            color: #1a73e8;
+            font-size: 1.1em;
+        }
+        .competencias-lista {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .competencias-lista li {
+            background-color: #e0e8f7;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        /* Estilo para Impressão */
+        @media print {
+            .btn-print { display: none; }
+            <body> { border: none; box-shadow: none; padding: 0; margin: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    
+
+    
+</body>
+</html>
+
